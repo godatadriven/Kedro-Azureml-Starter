@@ -1,0 +1,14 @@
+# This is a boilerplate parameters config generated for pipeline 'iris_example'
+# using Kedro {{cookiecutter.kedro_version}}.
+#
+# Documentation for this file format can be found in "Parameters"
+# Link: https://kedro.readthedocs.io/en/0.18.4/kedro_project_setup/configuration.html#parameters
+iris_dataset:
+  test_size: 0.2
+  random_state: 42
+
+model:
+  solver: lbfgs
+  C: 1
+  max_iter: 100
+  random_state: 42

@@ -1,0 +1,17 @@
+{
+  "project_name": "YOUR_PROJECT_NAME",
+  "repo_name": "{{ cookiecutter.project_name.strip().replace(' ', '-').replace('_', '-').lower() }}",
+  "python_package": "{{ cookiecutter.project_name.strip().replace(' ', '_').replace('-', '_').lower() }}",
+  "python_version": "3.10",
+  "kedro_version": "{{ cookiecutter.kedro_version }}",
+  "kedro_azureml_version": "0.3.4",
+  "azureml_workspace_name": "YOUR_WORKSPACE_NAME",
+  "azureml_resource_group": "YOUR_RESOURCE_GROUP",
+  "azureml_experiment_name": "{{ cookiecutter.project_name.strip().replace(' ', '-').replace('_', '-').lower() }}",
+  "azureml_environment_name": "{{ cookiecutter.project_name.strip().replace(' ', '-').replace('_', '-').lower() }}",
+  "azureml_storage_account_name": "YOUR_STORAGE_ACCOUNT_NAME",
+  "azureml_storage_account_container_name": "kedro",
+  "azureml_compute_cluster_name": "YOUR_COMPUTE_CLUSTER_NAME",
+  "azureml_container_registry_name": "YOUR_CONTAINER_REGISTRY_NAME",
+  "include_iris_example": "no"
+}

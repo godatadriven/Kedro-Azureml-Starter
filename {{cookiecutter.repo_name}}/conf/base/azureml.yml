@@ -1,0 +1,41 @@
+azure:
+  # Azure ML Experiment Name
+  experiment_name: "{{ cookiecutter.azureml_experiment_name }}"
+  # Azure resource group to use
+  resource_group: "{{ cookiecutter.azureml_resource_group }}"
+  # Azure ML Workspace name
+  workspace_name: "{{ cookiecutter.azureml_workspace_name }}"
+  # Azure ML Environment to use during pipeline execution
+  # You can use the syntax <environment_name>@latest for the latest version or <environment-name>:<version> for a specific version.
+  environment_name: "{{ cookiecutter.azureml_environment_name }}@latest"
+  # Path to directory to upload, or null to disable code upload
+  code_directory: "."
+  # Path to the directory in the Docker image to run the code from
+  # Ignored when code_directory is set
+  working_directory: /home/kedro
+
+  # Temporary storage settings - this is used to pass some data between steps
+  # if the data is not specified in the catalog directly
+  temporary_storage:
+    # Azure Storage account name, where the temp data should be stored
+    # It's recommended to set Lifecycle management rule for storage container, to avoid costs of long-term storage
+    # of the temporary data. Temporary data will be stored under abfs://<containter>/kedro-azureml-temp path
+    # See https://docs.microsoft.com/en-us/azure/storage/blobs/lifecycle-management-policy-configure?tabs=azure-portal
+    account_name: "{{ cookiecutter.azureml_storage_account_name }}"
+    # Name of the storage container
+    container: "{{ cookiecutter.azureml_storage_account_container_name }}"
+  compute:
+    # Azure compute used for running kedro jobs.
+    # Additional compute cluster can be defined here. Individual nodes can reference specific compute clusters by adding
+    # the section title (e.g. <your_node_tag>) as a node_tag to their tags list. Nodes without a tag will run on
+    # __default__ cluster.
+    __default__:
+      cluster_name: "{{ cookiecutter.azureml_compute_cluster_name }}"
+    # <your_node_tag>:
+    #   cluster_name: "<your_cluster_name>"
+docker:
+  # This option is for backward compatibility and will be removed in the future versions
+  # We suggest using the Azure environment instead
+  # See https://kedro-azureml.readthedocs.io/en/0.2.1/source/03_quickstart.html
+  # Docker image to use during pipeline execution
+  image: ~

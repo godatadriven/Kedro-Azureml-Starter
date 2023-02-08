@@ -1,0 +1,83 @@
+project_name:
+    title: "Project Name"
+    text: |
+      Please enter a human readable name for your new project.
+      Spaces, hyphens, and underscores are allowed.
+
+python_version:
+  title: "Python Version"
+  regex_validator: '^3\.((10)|9|(8))$'
+  error_message: |
+    You can pick only Python 3.10, 3.9 or 3.8.
+  text: |
+    Please select the Python version you want to use for your project.
+    You can pick either 3.10, 3.9 or 3.8.
+
+kedro_azureml_version:
+  title: "Kedro AzureML Version"
+  regex_validator: '^[0-9]+\.[0-9]+(\.[0-9]+)?'
+  error_message: |
+    You can pick only Kedro AzureML version in the format of X.Y.Z.
+  text: |
+    Please select the Kedro AzureML version you want to use for your project.
+    You can pick any version in the format of X.Y.Z.
+
+azureml_resource_group:
+  title: "Resource Group"
+  text: |
+      Please enter the name of the Resource Group that contains the AzureML Workspace you want to use for your project.
+
+azureml_workspace_name:
+  title: "AzureML Workspace Name"
+  text: |
+    Please enter the name of the AzureML Workspace you want to use for your project.
+
+azureml_compute_cluster_name:
+    title: "AzureML Compute Cluster Name"
+    text: |
+        Please enter the name of the AzureML Compute Cluster you want to use for your project.
+        This cluster needs to exist already.
+
+azureml_experiment_name:
+    title: "AzureML Experiment Name"
+    text: |
+        Please enter the name of the AzureML Experiment you want to use for your project.
+        All runs and their logs will be stored under this name in the workspace.
+
+azureml_environment_name:
+  title: "AzureML Environment Name"
+  text: |
+    Please enter the name of the AzureML Environment you want to use for your project.
+    This is the environment that will be used to run the pipeline steps.
+    It is a docker image that contains all the dependencies needed to run the pipeline.
+
+azureml_storage_account_name:
+    title: "Azure Storage Account Name"
+    text: |
+        Please enter the name of the Azure Storage Account you want to use for your project.
+        Here we will store the temporary data for the AzureML pipeline.
+
+azureml_storage_account_container_name:
+    title: "Azure Storage Account Container Name"
+    text: |
+        Please enter the name of the Azure Storage Account Container you want to use for your project.
+        In this container we will store the temporary data for the AzureML pipeline.
+        This container needs to exist already.
+
+azureml_container_registry_name:
+    title: "Azure Container Registry Name"
+    text: |
+        Please enter the name of the Azure Container Registry you want to use for your project.
+        This is the registry that will be used to store the docker image for the AzureML pipeline.
+        This registry needs to exist already.
+
+include_iris_example:
+    title: "Include Iris Example"
+    regex_validator: '^(yes)|(no)?'
+    error_message: |
+      Please answer with either 'yes' or 'no'.
+    text: |
+      Do you want the Iris example to be included in your project?
+      This will add an example pipeline that trains a model on the Iris dataset ensuring that you can directly run an example pipeline on AzureML.
+      Please answer with either 'yes' or 'no'.
+      
