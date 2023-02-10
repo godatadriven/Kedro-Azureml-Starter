@@ -1,4 +1,5 @@
 # Kedro AzureML Starter Tutorial
+TODO: remove duplicate info from README.md and {{cookiecutter.repo_name}}/README.md.
 
 The goal of this tutorial is to see how you can refactor a simple `train.py` file into Kedro pipelines.
 It might seem a bit like over engineering, but once we have done this refactoring you we immediately see benefits like:
@@ -483,7 +484,7 @@ After you have provided your key, the plugin will upload your code and submit yo
 When the upload process is finished, the plugin will print a URL to your pipeline run in the AzureML portal.
 If you click on this link, you will go directly to your pipeline job in the AzureML port.
 
-TODO: Add screenshot of AzureML portal
+![](images/azureml_viz.jpg)
 
 
 #### Optional: Add (hyper)parameters and metric logging
@@ -531,6 +532,11 @@ def evaluate_model(
 ```
 
 TODO: Image of the metrics in the AzureML portal
+
+#### Optional: Explore the AzureML UI
+TODO: show the code upload.
+TODO: show the logs.
+TODO: show the step overview.
 
 #### Optional: Accessing the cloud model locally
 TODO
