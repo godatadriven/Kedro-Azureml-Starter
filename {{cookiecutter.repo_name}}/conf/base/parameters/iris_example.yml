@@ -10,5 +10,4 @@ iris_dataset:
 model:
   solver: lbfgs
   C: 1
-  max_iter: 100
   random_state: 42

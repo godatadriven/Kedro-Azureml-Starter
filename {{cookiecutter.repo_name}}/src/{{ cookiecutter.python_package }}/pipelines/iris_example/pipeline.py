@@ -24,13 +24,13 @@ def create_pipeline(**kwargs) -> Pipeline:
                 func=train_model,
                 inputs=["data_train", "params:model"],
                 outputs="model",
-                name="make_predictions",
+                name="train_model",
             ),
             node(
                 func=evaluate_model,
                 inputs=["model", "data_test"],
                 outputs=None,
-                name="report_accuracy",
+                name="evaluate_model",
             ),
         ]
     )
