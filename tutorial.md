@@ -1,10 +1,11 @@
 # Kedro AzureML Starter Tutorial
 
-The goal of this tutorial is to see how you can refactor a simple `train.py` into Kedro pipelines.
+The goal of this tutorial is to see how you can refactor a simple `train.py` file into Kedro pipelines.
 It might seem a bit like over engineering, but once we have done this refactoring you we immediately see benefits like:
 - The code has become more modular and easier to test.
 - The code can run both locally and on AzureML.
 - The code can be easily extended with additional steps.
+- You can easily access the intermediate results from your pipeline in Jupiter notebooks for further analysis.
 - And much more...
 
 The simple `train.py` we will refactor is logistic regression model for the famous [iris dataset](https://scikit-learn.org/stable/auto_examples/datasets/plot_iris_dataset.html).
@@ -52,8 +53,23 @@ if __name__ == "__main__":
     main()
 ```
 
-### Preparing your environment
-For this tutorial you will need a Python 3.8+ environment with kedro installed.
+## Part 0: Setup
+TODO: Intro
+
+### Prerequisites
+In this tutorial we assume you have the following:
+- Python 3.8+ installed.
+- A terminal with the Azure CLI installed. (See [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) for installation instructions.
+- The following Azure resources:
+  - Azure Machine Learning Workspace with a compute cluster. ([Click here](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-attach-compute-cluster?tabs=azure-studio) for more info.)
+  - Azure Container Registry.
+  - Azure Storage Account with a container.
+
+We consider creating these Azure resources out of scope for this tutorial.
+So, we assume that your IT department has created them for your or that you have created them yourself based on the [Azure documentation pages](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-workspace?tabs=azure-portal#create-a-workspace).
+
+### Installing Kedro
+For this tutorial you will need kedro installed as a CLI tool.
 If you don't have kedro installed yet, then are three options:
 - Create a new conda environment with Python 3.8+ and install kedro using pip:
     ```bash
@@ -80,13 +96,7 @@ After, you have installed kedro, you can verify that it is installed correctly b
 kedro, version 0.18.4
 ```
 
-Additionally, you will need the following Azure resources:
-- Azure Machine Learning Workspace with a compute cluster.
-- Azure Container Registry.
-- Azure Storage Account.
-
 ### Gathering your Azure resource information
-Kedro's CLI has a build in command to create a new project based on predefined templates.
 In this tutorial, we will be using the [kedro-azureml-starter](https://github.com/godatadriven/Kedro-Azureml-Starter) template.
 This template automatically generates all the boilerplate code you need to run your kedro pipelines both locally and on AzureML.
 Before, we can generate a new project, we first need to gather some information about our Azure resources.
@@ -103,7 +113,7 @@ Here you can most of the information under the essentials tab.
 ![](images/ml-workspace-resources.jpg)
 
 ### Create a new project
-Next, we can create a new kedro project using the kedro-azureml-starter template.
+Next, we can create a new kedro project using the [kedro-azureml-starter](https://github.com/godatadriven/kedro-azureml-starter) template.
 In your terminal, go to the directory where you want to create your new project and run the following command:
 ```bash
 kedro new \
@@ -126,6 +136,8 @@ Create a new virtual environment and install the dependencies using the followin
 ```bash
 pip install -r src/requirements.txt
 ```
+All preparations are done!.
+Let's get started with the code.
 
 ### Registering your first dataset
 Previously, we discussed that kedro has a built-in data catalog.
@@ -173,6 +185,8 @@ However, for the data catalog it does not matter if the data is stored locally o
 It still works the same way.
 This makes the data catalog a very powerful tool to manage and share data across your team.
 
+
+## Part 1: Building a Kedro local pipeline
 
 ### Creating a pipeline
 Now that our data set is now accessible via our data catalog, we can start building our first pipeline.
@@ -353,7 +367,6 @@ This was just a quick example of how you can use the data catalog to save your m
 However, nothing is stopping you from any other step output that you want to access later on.
 This is extremely useful since it makes your pipelines very extensible.
 
-
 #### Optional: Visualizing your pipeline
 An other useful feature of Kedro is the ability to visualize your pipeline.
 We can now also visualize our pipeline using:
@@ -362,15 +375,17 @@ kedro viz
 ```
 This will open a web browser with a visualization of our pipeline.
 If you did everything correctly, it should look like this:
+
 ![](images/kedro_viz.jpg)
+
 Using this tool, you can visually inspect your pipeline.
 You can also click on specific nodes to see their inputs, outputs and (hyper) parameters.
 Feel free to play around with the visualization tool and explore a bit.
 
+## Part 2: Running the Kedro pipeline on AzureML
+TODO: intro
 
-### Running your pipeline on AzureML
-
-#### Preparing Azure CLI
+### Preparing Azure CLI
 For this section, you need to have access to the Azure CLI.
 If you do not have it installed yet, you can follow the instructions [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).
 You need to make sure you have the `az ml` extension installed.
@@ -378,7 +393,7 @@ You can verify this by running:
 ```bash
 az ml --help
 ```
-If you get an error, you need to install the extension (for more information, see [here](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-configure-cli?tabs=public)):
+If you get an error, you need to install the `ml` extension (for more information, see [here](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-configure-cli?tabs=public)):
 ```bash
 az extension add -n ml
 ```
@@ -390,11 +405,11 @@ az login # az login --use-device-code # if you work on a remote machine
 az acr login --name <acr_name>
 ```
 
-#### Creating an AzureML environment
-Before we can run our pipeline on AzureML, we must replicate our local environment in Docker container.
+### Creating an AzureML environment
+Before we can run our pipeline on AzureML, we must replicate our local environment in a Docker container.
 This will ensure that our AzureML pipeline will run with the exact same dependencies as our local environment.
 We have already created a Dockerfile for this, which does the following:
-1. It installs your Python version.
+1. It installs the Python version you specified during the project creation (`kedro new ...`).
 1. It copies your `requirements.txt` file to the container and installs all the dependencies in it.
 
 After building the container, we can push it to our Azure Container Registry.
@@ -412,40 +427,49 @@ az ml environment create \
 ```
 If you did everything correctly, you should now be able to see your environment in the AzureML portal under `Environments`.
 
-#### Refactoring the pipeline to remove the local assumptions
-When you run a pipeline in the cloud, ever step can be executed on a different machine.
-Thus, you cannot make the assumption that the data is available locally.
-So, we need to make some small changes to our code to remove our dependency on the local file system:
+One important thing to note is that every time you change your `requirements.txt` file, you need to rebuild the environment.
+If you do not do this, will run into dependency mismatches.
 
+### Refactoring the pipeline to remove the local assumptions
+When you run a pipeline in the cloud, every step can be executed on a different machine.
+Thus, you cannot make the assumption that your data is available locally.
+Currently, our pipeline makes the assumption that all data will be stored in the `data` folder.
+In our code, we violate this assumption in two places:
+1. When we load the iris data set, we assumed that it is stored at `data/01_raw/iris.csv`.
+2. When we save/load the model, we assume that it is stored at `data/06_models/model.pkl`.
 
+So let's fix that.
+#### Making the raw data available in the cloud
+TODO: add explanation
 
-In the pipeline, we developed so far, we have made the assumption that no longer hold when
 
 Make sure you remove the following line from `.amlignore`:
 ```text
 data/01_raw/**
 ```
+
+#### Storing intermediate data in the cloud
+TODO: add explanation
 ```yaml
 azure_storage:
   account_name: <YOUR_AZURE_STORAGE_ACCOUNT_NAME>
   account_key: <YOUR_AZURE_STORAGE_ACCOUNT_KEY>
 ```
 
-TODO
+TODO: add explanation
 ```yaml
 model:
   type: pickle.PickleDataSet
   filepath: abfs://<your_container_name>/data/06_models/model.pkl
 ```
 
-#### Running the pipeline on AzureML
-
+### Running the pipeline on a AzureML Compute Cluster
 
 Now that we have our environment and our pipeline ready, we can run our pipeline on AzureML.
 We can do this by running the following command from the root of your project (folder containing `pyproject.toml`):
 ```bash
-kedro azureml run
-# kedro azureml run --subscription_id <YOUR_AZURE_SUBSCRIPTION_ID> # if have not set the `AZURE_SUBSCRIPTION_ID` environment variable
+kedro azureml run --subscription_id <YOUR_AZURE_SUBSCRIPTION_ID>
+# kedro azureml run  # if you have set the `AZURE_SUBSCRIPTION_ID` environment variable
 ```
 You will most likely see the following prompt:
 ```text
@@ -454,15 +478,68 @@ Please provide Azure Storage Account Key for storage account <azure-storage-acco
 ```
 You will need to provide your Azure Storage Account Key here.
 (Don't know where to find this? See the FAQ section below.)
-The Kedro AzureML plugin needs this to store the intermediate data temporarily on in your Storage Account.
+The Kedro AzureML plugin needs this to store the intermediate data temporary on in your Storage Account.
 After you have provided your key, the plugin will upload your code and submit your pipeline to AzureML.
 When the upload process is finished, the plugin will print a URL to your pipeline run in the AzureML portal.
 If you click on this link, you will go directly to your pipeline job in the AzureML port.
+
+TODO: Add screenshot of AzureML portal
+
+
+#### Optional: Add (hyper)parameters and metric logging
+TODO
+
+TODO: Example how to log using mlflow
+```python
+mlflow.log_param(key, value)
+mlflow.log_metric(name, value)
+```
+
+```python
+...
+import mlflow
+...
+
+
+def split_data(
+    data: pd.DataFrame, parameters: Dict[str, Any]
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    ...
+    for key, value in parameters.items():
+        mlflow.log_param(key, value)
+    ...
+
+def train_model(
+    data_train: pd.DataFrame, parameters: Dict[str, Any]
+) -> LogisticRegression:
+    ...
+    for key, value in parameters.items():
+        mlflow.log_param(key, value)
+    ...
+    accuracy = model.score(x, y)
+    mlflow.log_metric("training/accuracy", accuracy)
+    ...
+
+def evaluate_model(
+    model: LogisticRegression,
+    data_test: pd.DataFrame,
+) -> pd.DataFrame:
+    ...
+    accuracy = model.score(x, y)
+    mlflow.log_metric("test/accuracy", accuracy)
+    ...
+```
+
+TODO: Image of the metrics in the AzureML portal
 
 #### Optional: Accessing the cloud model locally
 TODO
 
 ## Recap
+TODO: Give a sumary
+
+## Next steps
+TODO: ...
 
 ## FAQ
 
