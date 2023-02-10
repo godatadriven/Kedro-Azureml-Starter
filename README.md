@@ -11,6 +11,7 @@ Quickly want to try this out? This starter can automatically generate the above 
 
 ## Requirements for this starter
 - Python 3.8+
+- A terminal with the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) installed. 
 - kedro >= 0.18.4. You can install kedro using [pipx](https://github.com/pypa/pipx), pip or conda:
 ```bash
 pipx install kedro
