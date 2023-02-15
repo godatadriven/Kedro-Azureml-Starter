@@ -454,8 +454,11 @@ Now, all that is left is to tell AzureML about our environment by registering it
 We can do all this by running the following 3 commands:
 
 ```bash
-docker build -t <acr_name>.azurecr.io/kedro-base-image/iris_enviroment:latest . \
-docker push <acr_name>.azurecr.io/kedro-base-image/iris_enviroment:latest && \
+# Build the environment
+docker build -t <acr_name>.azurecr.io/kedro-base-image/iris_enviroment:latest . 
+# Push the environment to ACR such that AzureML can access it
+docker push <acr_name>.azurecr.io/kedro-base-image/iris_enviroment:latest
+# Register the environment with AzureML such that the pipeline can use it
 az ml environment create \
   --name iris_enviroment \
   --image <acr_name>.azurecr.io/kedro-base-image/iris_enviroment:latest \
@@ -468,39 +471,69 @@ One important thing to note is that every time you change your `requirements.txt
 If you do not do this, you will run into dependency mismatches.
 
 ### Refactoring the pipeline to remove the local assumptions
-When you run a pipeline in the cloud, every step can be executed on a different machine.
-Thus, you cannot make the assumption that your data is available locally.
-In our code, we violate this assumption in two places:
-1. When we load the iris data set, we assumed that it is stored at `data/01_raw/iris.csv`.
-2. When we save/load the model, we assume that it is stored at `data/06_models/model.pkl`.
+Every step can be executed on a different machine when you run a pipeline in the cloud. Thus, you cannot assume that your data is available locally. In our code, we violate this assumption in two places:
+1. When we load the iris data set, we assume it is stored at `data/01_raw/iris.csv`.
+1. When we save/load the model, we assume it is stored at `data/06_models/model.pkl`.
 
+ 
 So let's fix that.
-#### Making the raw data available in the cloud
-TODO: add explanation
 
+#### Setting up the credentials
+Before we can fix these issues, we need to ensure that Kedro can access our Azure storage account.
+To do this, Kedro needs to know the name of your storage account and its account key, which we already gathered in the previous sections.
+In Kedro, we can store these credentials in the base/local/credentials.yml file. 
+Git automatically ignores this file to prevent you from accidentally committing your credentials. 
+In this file, we need to add the following lines:
 
-Make sure you remove the following line from `.amlignore`:
-```text
-data/01_raw/**
-```
-
-#### Storing intermediate data in the cloud
-TODO: add explanation
 ```yaml
 azure_storage:
   account_name: <YOUR_AZURE_STORAGE_ACCOUNT_NAME>
   account_key: <YOUR_AZURE_STORAGE_ACCOUNT_KEY>
 ```
 
-TODO: add explanation
+#### Making the raw data available in the cloud
+In a typical cloud-based workflow, your raw data is stored in a blob storage account.
+Our raw data is currently stored locally, so let's upload it to the blob storage.
+We can do this by running the following command:
+
+```bash
+# az login # if you are not logged in yet
+az storage blob upload \
+    --account-name <storage-account> \
+    --container-name <container> \
+    --name data/01_raw/iris.csv \ 
+    --file data/01_raw/iris.csv \
+    --overwrite
+# --name: path in the blob storage
+# --file: local path to the file
+```
+After running this command, your data should now be stored under `<container>/data/01_raw/iris.csv` in your blob storage account.
+Now, all that is left to do is tell Kedro where to find the data and how to access it.
+In our case, we will use the `abfs` protocol, which tells Kedro to look for the data in Azure Blob Storage.
+Kedro also needs to know how to access the storage account.
+We can do this by adding the name of the credentials we created in the previous step to the `credentials` attribute.
+This will tell Kedro to look for the credentials with the specified name in `conf/local/credentials.yml`.
+After applying these changes, you should end up with the following configuration:
+
+```yaml
+iris:
+  type: pandas.CSVDataSet
+  filepath: abfs://kedro/data/01_raw/iris.csv
+  credentials: azure_storage # the name we specified in credentials.yml
+```
+
+#### Storing intermediate data in the cloud
+Just like the raw data, we also need to tell Kedro to store the intermediate data in Azure Blob Storage.
+All we need to do for this is add the `abfs` protocol to the file path attribute and add the credentials attribute. 
+After applying these changes, you should end up with the following configuration for the model output:
 ```yaml
 model:
   type: pickle.PickleDataSet
   filepath: abfs://<your_container_name>/data/06_models/model.pkl
+  credentials: azure_storage
 ```
 
 ### Running the pipeline on a AzureML Compute Cluster
-
 Now that we have our environment, data, and pipeline ready, we can run our pipeline on AzureML.
 We can do this by running the following command from the root of your project (folder containing `pyproject.toml`):
 ```bash
@@ -522,16 +555,22 @@ If you click this link, you will go directly to your pipeline job in the AzureML
 Once the pipeline is finished, you should see the following in the AzureML portal:
 ![](images/azureml_viz.jpg)
 
+That's it! You have successfully run your pipeline on AzureML!
 
 #### Optional: Add (hyper)parameters and metric logging
-TODO
-
-TODO: Example how to log using mlflow
+So far, we have been printing our metrics to the terminal.
+It works, but it is not convenient since we have to manually dig through the logs to find the metrics we are interested in.
+It is much more convenient log to the metrics to AzureML such that we easily view and compare them in the AzureML UI.
+AzureML supports the MLFlow api, so we can use the MLFlow Python API to log our metrics.
+So, when you run a pipeline step on AzureML and you call one of the MLFlow logging functions, the metrics will be logged to AzureML.
+The two logging function we will use are:
 ```python
+import mlflow
 mlflow.log_param(key, value)
 mlflow.log_metric(name, value)
 ```
 
+So, let's add these function to our pipeline steps:
 ```python
 ...
 import mlflow
@@ -567,21 +606,39 @@ def evaluate_model(
     ...
 ```
 
-TODO: Image of the metrics in the AzureML portal
+After rerunning the pipeline with the above changes, you should now see the metrics logged in the AzureML UI.
+You can find these metric by going to your pipeline run in the AzureML portal.
+Then, click on the pipeline step you are interested in.
+In the pipeline step overview, you will see the all the hyperparameters we logged using `mlflow.log_param`.
 
-#### Optional: Explore the AzureML UI
-TODO: show the code upload.
-TODO: show the logs.
-TODO: show the step overview.
+![](images/azureml_hyperparms.jpg)
+
+AzureML will also show you the metrics we logged using `mlflow.log_metric`.
+The overview page will show the last logged metric, while the `Metrics` tab will show all the logged metrics.
+This will show you something like:
+![](images/metrics.jpg)
 
 #### Optional: Accessing the cloud model locally
-TODO
+In the previous section, we trained a model and told Kedro to store the model in Azure Blob Storage. 
+Since we did this using the data catalog, we can load the model locally. So, let's try that out in a Jupyter Notebook. 
+Again, make sure you start a Kedro Notebook session using the following:
+```bash
+kedro jupyter lab
+```
+Just like in the previous section, we can access any data in the data catalog using the `catalog.load` function.
+If we now call `catalog.load("model")`, Kedro will load the model from Azure Blob Storage and we can use the model in the notebook as we see fit:
+![](images/kerdo_notebook_model.jpg)
 
-## Recap
-TODO: Give a sumary
-
-## Next steps
-TODO: ...
+## Conclusion
+In this tutorial, we have refactored a simple training script to a Kedro pipeline that can run locally and on AzureML. 
+To do this, we first decoupled our data load/save logic from our pipeline code. 
+Then, we split our training logic into separate pipeline steps. 
+After that, we saw how Kedro could automatically translate our pipeline to an AzureML pipeline. 
+I have to admit it was a bit of work to refactor our code to a Kedro pipeline, but the benefits outweigh the small costs. 
+For example, the new structure makes our code more organized and easier to extend and test. 
+Additionally, the ability to access any intermediate data in a notebook is very powerful. 
+Also, Kedro's ability to translate pipelines to other platforms (such as AzureML) is a huge benefit since it avoids vendor lock-in. 
+Therefore, I highly recommend using Kedro for any data science project, and I hope you will use Kedro for your following AzureML project.
 
 ## FAQ
 
@@ -604,6 +661,7 @@ So, make sure there are no symlinks in your project directory.
 Typically, this happens when you have a `.venv` or `venv` directory in the root of your project (the folder with `pyproject.toml`).
 Simply moving the folder containing the symlink to a different location will solve the problem.
 
-
-
-
+### Some of my local file are not present in the AzureML run
+AzureML checks the `.amlignore` file to determine which files should not be uploaded to the AzureML run.
+Your missing file or its parent directory is most likely listed in the `.amlignore` file.
+Please check the `.amlignore` and see if editing this file solves your problem.
