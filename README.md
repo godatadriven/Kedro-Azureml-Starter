@@ -7,7 +7,12 @@ Kedro pipeline             |  AzureML Pipeline
 :-------------------------:|:-------------------------:
 <img src="images/kedro_viz.jpg" width="450">  | <img src="images/azureml_viz.jpg"  width="450">
 
-Quickly want to try this out? This starter can automatically generate the above pipeline for you. Just follow the instructions below. 
+Quickly want to try this out? 
+This starter can automatically generate the above pipeline for you. 
+Just follow the instructions below.
+What a bit more explanation? 
+See our tutorial [here](tutorial.md).
+
 
 ## Requirements for this starter
 - Python 3.8+
