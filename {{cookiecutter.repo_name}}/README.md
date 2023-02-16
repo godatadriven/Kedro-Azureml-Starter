@@ -43,60 +43,50 @@ The usage section contains more information on how to run and visualize the pipe
 {% endif +%}
 
 ## Usage
+A nice feature of this template is that your pipelines run both locally and on AzureML.
 
 ### Run locally
-A nice feature of this template is that your pipelines run both locally and on AzureML. 
-However, if some of your steps store data in Azure Blob Storage, ensure you have to ensure that you set up the correct credentials (see the  Reading and writing intermediate data to Azure Blob Storage section). 
-To run your pipeline locally, use the command:
+Running locally works exactly the same as in a normal Kedro project:
 
 ```bash
 kedro run
 ```
 
 ### Run on AzureML
-In this project, we use the [kedro-azureml](https://kedro-azureml.readthedocs.io/) plugin to automatically translate our kedro pipelines to AzureML pipelines.
-Therefor, we don't need to write any AzureML specific code.
-We only need to run `kedro azureml run`.
-However, before we can do this, we first need to create a docker based environment for AzureML. 
-
+We use the [kedro-azureml plugin](https://kedro-azureml.readthedocs.io/) in this project to translate our Kedro pipelines to AzureML pipelines.
+Therefore, we don't need to write any AzureML-specific code; we only need to run `kedro azureml run`.
 
 #### Environment preparation
-AzureML runs our code inside a Docker container. 
-This container must contain our Python version and all the dependencies needed to run our code. 
-This container does not need to contain our code because AzureML will copy and upload all our code every time we submit a job, and this ensures that we are always running the latest version of our code.
-
-Before creating our environment, you need to log in to Azure, and the Azure Container Registry (ACR) connected to your AzureML workspace.
-You can do this using the following commands:
+Before you can run your pipeline on AzureML, you need to create a docker-based environment. 
+You only need to do this when your Python version or dependencies change because the command `kedro azureml run` will upload all your local files and mount them into the docker container.
+Creating a docker-based environment consist of the following steps:
+1. Login to your Azure account using the Azure CLI.
+2. Login to your Container Registry using the Azure CLI.
+3. Build the docker image using the generated `Dockerfile`.
+4. Push the docker image to your Container Registry.
+5. Register you docker images as an AzureML environment.
 
 ```bash
+# Login to your Azure account
 az login
+# Login to your Container Registry
 az acr login --name {{cookiecutter.azureml_container_registry_name}}
-```
-
-Now, we can create our environment.
-Creating an environment is a three-step process:
-1. Build the Docker image: The `Dockefile` in this project contains all the necessary steps.
-2. Push the Docker image to the ACR: This is done using the `docker push` command.
-3. Create the AzureML environment: This is done using the `az ml environment create` command.
-
-You do this using the following command:
-
-```bash
-docker build -t {{cookiecutter.azureml_container_registry_name}}.azurecr.io/kedro-base-image/{{cookiecutter.azureml_environment_name}}:latest . \
-docker push {{cookiecutter.azureml_container_registry_name}}.azurecr.io/kedro-base-image/{{cookiecutter.azureml_environment_name}}:latest && \
+# Build the docker image
+docker build -t {{cookiecutter.azureml_container_registry_name}}.azurecr.io/kedro-base-image/{{cookiecutter.azureml_environment_name}}:latest .
+# Push the docker image to your Container Registry
+docker push {{cookiecutter.azureml_container_registry_name}}.azurecr.io/kedro-base-image/{{cookiecutter.azureml_environment_name}}:latest
+# Register you docker images as an AzureML environment.
 az ml environment create \
   --name {{cookiecutter.azureml_environment_name}} \
   --image {{cookiecutter.azureml_container_registry_name}}.azurecr.io/kedro-base-image/{{cookiecutter.azureml_environment_name}}:latest \
   --workspace-name {{ cookiecutter.azureml_workspace_name }} \
   --resource-group {{ cookiecutter.azureml_resource_group }}
 ```
-Note: AzureML expects `linux/amd64` based images. That is why we added `--platform linux/amd64` docker file.
+Note: AzureML expects `linux/amd64` based images. That is why we added the `--platform linux/amd64` flag in the docker file.
 As a result, building the image might take a while if you use a M1 Mac.
 
 #### Submitting 
-When you have created your environment, you can submit your pipeline to AzureML.
-All you need to do is run the command below and the [kedro-azureml](https://kedro-azureml.readthedocs.io/) plugin will take care of the rest.
-The plugin 
+After you have created your environment, you can submit your pipeline to AzureML using the following command:
 
 ```bash
 kedro azureml run 
@@ -110,53 +100,6 @@ Optionally, you can give the plugin additional information like:
 - `--wait-for-completion`: If specified, the command will wait until the run is completed. By default, the command will return immediately after the run is submitted.
 - `--help`: Show the additional options.
 
-### Optional: Reading and writing intermediate data to Azure Blob Storage
-
-Kedro projects typically store their (intermediate) results using the data [engineering convention](https://kedro.readthedocs.io/en/stable/faq/faq.html#what-is-data-engineering-convention).
-The big advantage of this convention is that you easily reuse these (intermediate) results in other pipeline steps.
-In Kedro, this is typically done by using the `catalog.yml` file.
-For example, if a pipeline produces a pickled model, you can store that in `data/06_models/model.pkl` by adding the following line to your `catalog.yml` file:
-
-```yaml
-model:
-  type: pickle.PickleDataSet # This tells kedro to store the data as a pickle file
-  filepath: kedro/06_models/model.pickle" # This tells kedro where to store the data on the local file system
-  backend: pickle # alternative: joblib
-```
-
-This will store the model on the local file system.
-Of course, saving files to the local file system is not very useful when running in the cloud.
-Luckily, kedro allows you to store these intermediate results in other places, like Azure Blob Storage.
-Before we can do this, we need to set up the credentials for Azure Blob Storage.
-This can be done by adding the following lines to your `conf/local/credentials.yml` file:
-
-```yaml
-azure_storage:
-  account_name: <YOUR_AZURE_STORAGE_ACCOUNT_NAME>
-  account_key: <YOUR_AZURE_STORAGE_ACCOUNT_KEY>
-```
-
-Now, all you need to do is change your `catalog.yml` to the following, and it will store the data in your Azure Blob Storage instead of the local file system:
-
-```yaml
-model:
-  type: pickle.PickleDataSet
-  filepath: abfs://<CONTAINER_NAME>/06_models/model.pickle" # This tells kedro where to store the data on your Azure Blob Storage
-  backend: pickle
-  credentials: azure_storage # This tells kedro to use the `azure_storage` from the `credentials.yml` file
-```
-
-The big advantage of this is that you can now cache and reuse your intermediate results both locally and in the cloud.
-For example, if all your data is stored in Azure Blob Storage, you run a part of your pipeline locally using the following:
-```bash
-kedro run --from-nodes=<YOUR_STARTING_NODE>
-```
-
-In AzureML, you do the something but only at pipeline level instead of node level:
-
-```bash
-kedro azureml run --pipeline "YOUR_PIPELINE_NAME"
-```
 
 ## FAQ
 
@@ -178,3 +121,20 @@ For some reason, it does not resolve symlinks correctly.
 So, make sure there are no symlinks in your project directory.
 Typically, this happens when you have a `.venv` or `venv` directory in the root of your project.
 Simply moving the folder containing the symlink to a different location will solve the problem.
+
+### How do I access pipeline step outputs if I run my pipeline in AzureML?
+You can store any pipeline step output in an Azure Blob Storage Account.
+To do this, you need to add the following lines to your `catalog.yml`:
+```yaml
+<your_step_output_name>:
+  type: <your_type>
+  filepath: abfs://<your_container_name>/<your_path>/<your_file_name>
+  credentials: azure_storage
+```
+Kedro will also need to know your credentials to access the Azure Blob Storage Account.
+Therefore, you need to add the following lines to your `credentials.yml`:
+```yaml
+azure_storage:
+  account_name: <YOUR_AZURE_STORAGE_ACCOUNT_NAME>
+  account_key: <YOUR_AZURE_STORAGE_ACCOUNT_KEY>
+```

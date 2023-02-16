@@ -1,5 +1,4 @@
 # Kedro AzureML Starter Tutorial
-TODO: remove duplicate info from README.md and {{cookiecutter.repo_name}}/README.md.
 
 The goal of this tutorial is to see how you can refactor a simple `train.py` file into Kedro pipelines.
 It might seem a bit like over-engineering, but once we have done this refactoring you, we immediately see benefits like:
@@ -481,7 +480,7 @@ So let's fix that.
 #### Setting up the credentials
 Before we can fix these issues, we need to ensure that Kedro can access our Azure storage account.
 To do this, Kedro needs to know the name of your storage account and its account key, which we already gathered in the previous sections.
-In Kedro, we can store these credentials in the base/local/credentials.yml file. 
+In Kedro, we can store these credentials in the `base/local/credentials.yml` file. 
 Git automatically ignores this file to prevent you from accidentally committing your credentials. 
 In this file, we need to add the following lines:
 
