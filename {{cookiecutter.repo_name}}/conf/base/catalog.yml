@@ -17,7 +17,7 @@
 #  type: pandas.CSVDataSet
 #  filepath: abfs://{{ cookiecutter.azureml_storage_account_container_name }}/01_raw/bikes.csv"
 #  credentials: azure_storage
-{% if cookiecutter.include_iris_example == "false" +%}
+{% if cookiecutter.include_iris_example == "True" +%}
 iris_data:
   type: pandas.CSVDataSet
   filepath: data/01_raw/iris.csv

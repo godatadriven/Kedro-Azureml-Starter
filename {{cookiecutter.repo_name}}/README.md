@@ -27,7 +27,7 @@ pip install -r requirements.txt
 ```
 If you need to add a new dependency, make sure to add it to `requirements.txt` because the Dockerfile uses this file to install the dependencies.
 
-{% if cookiecutter.include_iris_example == "true" +%}
+{% if cookiecutter.include_iris_example == "True" +%}
 
 ## Example pipeline
 We have included an example pipeline that you can use to get started.
