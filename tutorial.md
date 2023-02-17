@@ -615,7 +615,7 @@ In the pipeline step overview, you will see the all the hyperparameters we logge
 AzureML will also show you the metrics we logged using `mlflow.log_metric`.
 The overview page will show the last logged metric, while the `Metrics` tab will show all the logged metrics.
 This will show you something like:
-![](images/metrics.jpg)
+![](images/azureml_metrics.jpg)
 
 #### Optional: Accessing the cloud model locally
 In the previous section, we trained a model and told Kedro to store the model in Azure Blob Storage. 
