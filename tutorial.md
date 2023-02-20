@@ -57,6 +57,7 @@ if __name__ == "__main__":
 In this tutorial we assume you have the following:
 - Python 3.8+ installed.
 - A terminal with the Azure CLI installed. (See [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) for installation instructions.)
+- Docker installed
 - An Azure Resource group with the following resources:
   - An Azure Machine Learning Workspace with a compute cluster. ([Click here](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-attach-compute-cluster?tabs=azure-studio) for more info.)
   - An Azure Container Registry.
@@ -127,7 +128,7 @@ If you said yes, you would have the answers to this tutorial.
 I have chosen not to include the iris example, so I can show you how to build them from scratch.
 At this point, you should have the following directory structure:
 - `conf/`: This directory contains all the configuration files for your kedro project.
-  - `conf/azureml.yml`: This file contains the configuration for the AzureML pipeline.
+  - `conf/base/azureml.yml`: This file contains the configuration for the AzureML pipeline.
   - `conf/base/catalog.yml`: This file contains the configuration for the data catalog.
   - `conf/local/credentials.yml`: In this file you can store your credentials and other secrets. This will be ignored by git.
 - `data/`: Here kedro can store (intermediate) data locally according to the [data engineering convention](https://kedro.readthedocs.io/en/stable/faq/faq.html#what-is-data-engineering-convention).
@@ -220,10 +221,10 @@ In your terminal, run the following command to create a new pipeline:
 kedro pipeline create iris_pipeline
 ```
 This will create all the files needed for your pipeline:
-- `src/pipelines/iris_pipeline`: This is a new module that will contain all the pipeline code.
-  - `src/pipelines/iris_pipeline/nodes.py`: This file will contain all the pipeline step definitions.
-  - `src/pipelines/iris_pipeline/pipeline.py`: This file will specify how the pipeline steps are connected.
-- `conf/base/parameters/iris_pipeline`: Here you can store the default value for your pipeline specific (hyper)parameters.
+- `src/<PROJECT_NAME>/pipelines/iris_pipeline`: This is a new module that will contain all the pipeline code.
+  - `src/<PROJECT_NAME>/pipelines/iris_pipeline/nodes.py`: This file will contain all the pipeline step definitions.
+  - `src/<PROJECT_NAME>/pipelines/iris_pipeline/pipeline.py`: This file will specify how the pipeline steps are connected.
+- `conf/base/parameters/iris_pipeline.yml`: Here you can store the default value for your pipeline specific (hyper)parameters.
 - `src/tests/pipelines/iris_pipeline`: A module were you can store your unit tests for your pipeline.
 
 Feel free to have a look at the files that were created before we continue.
@@ -239,7 +240,7 @@ The original `train.py` file had 4 steps:
 The data catalog will take care of the first step.
 So, we only need to define the other 3 steps.
 Let's start with the splitting step.
-In the `src/pipelines/iris_pipeline/nodes.py` file, we will first add the following function:
+In the `src/<PROJECT_NAME>/pipelines/iris_pipeline/nodes.py` file, we will first add the following function:
 ```python
 from typing import Any, Dict, Tuple
 import pandas as pd
@@ -274,7 +275,7 @@ Storing these parameter in such a way looks a bit cumbersome, but it has a few a
 - Kedro now knows which (hyper)parameters are needed for each pipeline step, making it possible to change these parameters from the command line.
 
 Next, let's define the remaining pipeline steps.
-In the `src/pipelines/iris_pipeline/nodes.py` file, add the following functions:
+In the `src/<PROJECT_NAME>/pipelines/iris_pipeline/nodes.py` file, add the following functions:
 ```python
 ...
 from sklearn.linear_model import LogisticRegression
@@ -324,7 +325,7 @@ model:
 
 #### Combining the pipeline steps into a pipeline
 Now that we have defined all the pipeline steps, all that is left is to connect them together.
-We can do this in the `src/pipelines/iris_pipeline/pipeline.py` file.
+We can do this in the `src/<PROJECT_NAME>/pipelines/iris_pipeline/pipeline.py` file.
 This file already contains a `create_pipeline` function.
 We can add our pipeline steps to this function by adding `node` objects to the input list of the `pipeline` function.
 The node function takes 4 arguments:
@@ -333,7 +334,7 @@ The node function takes 4 arguments:
 - `outputs`: These are the names of the outputs of the function. These names can be used as input for other nodes. If the function does not return anything, you can set this to `None`.
 - `name`: This is a human friendly name for the node.
 
-So, if we want our pipeline to follow the same flow the original `train.py` file, we can add the following pipeline definition to `src/pipelines/iris_pipeline/pipeline.py`:
+So, if we want our pipeline to follow the same flow the original `train.py` file, we can add the following pipeline definition to `src/<PROJECT_NAME>/pipelines/iris_pipeline/pipeline.py`:
 
 ```python
 ...
@@ -398,7 +399,7 @@ However, nothing stops you from saving any of the other outputs. For example, yo
 - Etc.
 
 This feature is extremely useful since it makes your pipelines very extensible.
-s
+
 ### Optional: Visualizing your pipeline
 Another useful feature of Kedro is the ability to visualize your pipeline.
 You can do this by running:
@@ -444,7 +445,7 @@ az acr login --name <acr_name>
 ### Creating an AzureML environment
 Before we can run our pipeline on AzureML, we must replicate our local environment in a Docker container.
 This will ensure that our AzureML pipeline will run with the exact same dependencies as our local environment.
-We have already created a Dockerfile for this, which does the following:
+We have already (automatically) created a Dockerfile for this, which does the following:
 1. It installs the Python version you specified during the project creation (`kedro new ...`).
 1. It copies your `requirements.txt` file to the container and installs all the dependencies in it.
 
@@ -462,7 +463,8 @@ az ml environment create \
   --name iris_enviroment \
   --image <acr_name>.azurecr.io/kedro-base-image/iris_enviroment:latest \
   --workspace-name <YOUR_AML_WORKSPACE_NAME> \
-  --resource-group <YOUR_AZURE_RESOURCE_GROUP>
+  --resource-group <YOUR_AZURE_RESOURCE_GROUP> \
+  --subscription <YOUR_SUBSCRIPTION_ID>
 ```
 If you did everything correctly, you should now be able to see your environment in the AzureML portal under `Environments`.
 
@@ -480,7 +482,7 @@ So let's fix that.
 #### Setting up the credentials
 Before we can fix these issues, we need to ensure that Kedro can access our Azure storage account.
 To do this, Kedro needs to know the name of your storage account and its account key, which we already gathered in the previous sections.
-In Kedro, we can store these credentials in the `base/local/credentials.yml` file. 
+In Kedro, we can store these credentials in the `conf/local/credentials.yml` file. 
 Git automatically ignores this file to prevent you from accidentally committing your credentials. 
 In this file, we need to add the following lines:
 
@@ -502,10 +504,12 @@ az storage blob upload \
     --container-name <container> \
     --name data/01_raw/iris.csv \ 
     --file data/01_raw/iris.csv \
-    --overwrite
+    --overwrite \
+    --subscription <YOUR_SUBSCRIPTION_ID>
 # --name: path in the blob storage
 # --file: local path to the file
 ```
+Notice that `<container>` here refers to the one from a storage account, not a Docker one.
 After running this command, your data should now be stored under `<container>/data/01_raw/iris.csv` in your blob storage account.
 Now, all that is left to do is tell Kedro where to find the data and how to access it.
 In our case, we will use the `abfs` protocol, which tells Kedro to look for the data in Azure Blob Storage.
@@ -517,8 +521,10 @@ After applying these changes, you should end up with the following configuration
 ```yaml
 iris:
   type: pandas.CSVDataSet
-  filepath: abfs://kedro/data/01_raw/iris.csv
+  filepath: abfs://<container>/data/01_raw/iris.csv
   credentials: azure_storage # the name we specified in credentials.yml
+  load_args:
+    sep: ","
 ```
 
 #### Storing intermediate data in the cloud
