@@ -4,7 +4,7 @@
   "python_package": "{{ cookiecutter.project_name.strip().replace(' ', '_').replace('-', '_').lower() }}",
   "python_version": "3.10",
   "kedro_version": "{{ cookiecutter.kedro_version }}",
-  "kedro_azureml_version": "0.3.4",
+  "kedro_azureml_version": "0.3.5",
   "azureml_workspace_name": "YOUR_WORKSPACE_NAME",
   "azureml_resource_group": "YOUR_RESOURCE_GROUP",
   "azureml_experiment_name": "{{ cookiecutter.project_name.strip().replace(' ', '-').replace('_', '-').lower() }}",
