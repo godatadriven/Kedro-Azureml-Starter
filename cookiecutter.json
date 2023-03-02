@@ -13,5 +13,6 @@
   "azureml_storage_account_container_name": "kedro",
   "azureml_compute_cluster_name": "YOUR_COMPUTE_CLUSTER_NAME",
   "azureml_container_registry_name": "YOUR_CONTAINER_REGISTRY_NAME",
+  "subscription_id": "YOUR_SUBSCRIPTION_ID",
   "include_iris_example": "no"
 }
