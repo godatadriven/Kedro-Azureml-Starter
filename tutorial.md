@@ -543,8 +543,7 @@ model:
 Now that we have our environment, data, and pipeline ready, we can run our pipeline on AzureML.
 We can do this by running the following command from the root of your project (folder containing `pyproject.toml`):
 ```bash
-kedro azureml run --subscription_id <YOUR_AZURE_SUBSCRIPTION_ID>
-# kedro azureml run  # if you have set the `AZURE_SUBSCRIPTION_ID` environment variable
+kedro azureml run
 ```
 You will most likely see the following prompt:
 ```text
