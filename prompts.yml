@@ -71,6 +71,12 @@ azureml_container_registry_name:
         This is the registry that will be used to store the docker image for the AzureML pipeline.
         This registry needs to exist already.
 
+subscription_id:
+    title: "Azure subscription ID"
+    regex_validator: '^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$'
+    text: |
+        Please enter your Subscription ID. It must be in GUID format (00000000-0000-0000-0000-000000000000)
+
 include_iris_example:
     title: "Include Iris Example"
     regex_validator: '^(yes)|(no)?'

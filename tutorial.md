@@ -109,6 +109,7 @@ The template will ask you for the following resource information:
 - Azure Storage Account: The name of your Azure Storage Account.
 - Storage Account Container name: This is the name of the container in your Azure Storage Account where the (intermediate) data will be stored.
 - Azure Container Registry: The name of your Azure Container Registry.
+- Azure Subscription ID: The GUID that identifies your Azure subscription.
 
 You can find the information about your Azure resources in the Azure Portal by navigating to Machine Learning Workspace resource.
 Here you can most of the information under the essentials tab.
@@ -542,8 +543,7 @@ model:
 Now that we have our environment, data, and pipeline ready, we can run our pipeline on AzureML.
 We can do this by running the following command from the root of your project (folder containing `pyproject.toml`):
 ```bash
-kedro azureml run --subscription_id <YOUR_AZURE_SUBSCRIPTION_ID>
-# kedro azureml run  # if you have set the `AZURE_SUBSCRIPTION_ID` environment variable
+kedro azureml run
 ```
 You will most likely see the following prompt:
 ```text

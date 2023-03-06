@@ -93,7 +93,6 @@ kedro azureml run
 ```
 
 Optionally, you can give the plugin additional information like:
-- `--subscription_id <YOUR_AZURE_SUBSCRIPTION_ID>`: The Azure subscription ID to use. If not specified,  Defaults to value store in the `AZURE_SUBSCRIPTION_ID` environment variable.
 - `--pipeline_name <NAME>`: The name of the pipeline to run. If not specified, all pipelines will be run. This is useful if you only want to run a specific pipeline.
 - ` --params <PARAMS_IN_JSON>`: The parameters to use for the pipeline. If not specified, the default parameters in `conf/base` or `conf/local` will be used. This is useful if you want to experiment with different (hyper)parameters.
 - `--azureml_environment <YOUR_ENV_NAME>`: The name of the AzureML environment using the syntax `<environment_name>@latest` or `<environment-name>:<version>`. If not specified, the default environment will be used. This useful if you want to try out a newer version of your environment.
