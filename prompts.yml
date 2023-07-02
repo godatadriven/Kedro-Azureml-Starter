@@ -86,4 +86,13 @@ include_iris_example:
       Do you want the Iris example to be included in your project?
       This will add an example pipeline that trains a model on the Iris dataset ensuring that you can directly run an example pipeline on AzureML.
       Please answer with either 'yes' or 'no'.
-      
+
+include_iris_data:
+    title: "Include Iris Data"
+    regex_validator: '^(yes)|(no)?'
+    error_message: |
+      Please answer with either 'yes' or 'no'.
+    text: |
+      Do you want the Iris dataset to be included in your project as example data?
+      This will add the Iris dataset to the data/01_raw folder.
+      Please answer with either 'yes' or 'no'.
