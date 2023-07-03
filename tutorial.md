@@ -456,13 +456,13 @@ We can do all this by running the following 3 commands:
 
 ```bash
 # Build the environment
-docker build -t <acr_name>.azurecr.io/kedro-base-image/iris_enviroment:latest . 
+docker build -t <acr_name>.azurecr.io/kedro-base-image/iris_environment:latest . 
 # Push the environment to ACR such that AzureML can access it
-docker push <acr_name>.azurecr.io/kedro-base-image/iris_enviroment:latest
+docker push <acr_name>.azurecr.io/kedro-base-image/iris_environment:latest
 # Register the environment with AzureML such that the pipeline can use it
 az ml environment create \
-  --name iris_enviroment \
-  --image <acr_name>.azurecr.io/kedro-base-image/iris_enviroment:latest \
+  --name iris_environment \
+  --image <acr_name>.azurecr.io/kedro-base-image/iris_environment:latest \
   --workspace-name <YOUR_AML_WORKSPACE_NAME> \
   --resource-group <YOUR_AZURE_RESOURCE_GROUP> \
   --subscription <YOUR_SUBSCRIPTION_ID>
