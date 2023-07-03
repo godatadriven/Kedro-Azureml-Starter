@@ -8,7 +8,7 @@ jupyterlab~=3.0
 kedro~={{ cookiecutter.kedro_version }}
 kedro-datasets[pandas.CSVDataSet, pandas.ExcelDataSet, pandas.ParquetDataSet]~=1.0.0
 kedro-azureml[mlflow]~={{ cookiecutter.kedro_azureml_version }}
-kedro-docker~=0.3
+kedro-docker==0.3.5
 kedro-viz~=5.0
 nbstripout~=0.4
 pytest-cov~=3.0
