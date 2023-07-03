@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:{{cookiecutter.python_version|string}}-slim
+FROM --platform=linux/amd64 python:{{cookiecutter.python_version}}-slim
 
 # install project requirements
 COPY src/requirements.txt /tmp/requirements.txt
